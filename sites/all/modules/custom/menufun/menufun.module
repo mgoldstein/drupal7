@@ -1,0 +1,83 @@
+<?php
+
+/**
+ * @file 
+ * Use this module to learn about Drupal's menu system.
+ */
+
+/**
+ * Implements hook_permission().
+ */
+function menufun_permission() {
+  return array(
+    'receive greeting' => array(
+      'title' => t('Receive a greeting'),
+      'description' => t('Allow user to receive a greeting message.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function menufun_menu() {
+  $items['menufun'] = array(
+    'title' => 'Menu Fun',
+    'title callback' => 'menufun_title',
+    'page callback' => 'menufun_greeting',
+    'file' => 'menufun_greeting.inc',
+    // 'access callback' => TRUE,
+    'access callback' => 'user_access',
+    'access arguments' => array('Receive greeting'),
+    // 'type' => MENU_CALLBACK,
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => -1,
+  );
+  
+  $items['menufun/farewell'] = array(
+    'title' => 'Farewell',
+    'page callback' => 'menufun_farewell',
+    'file' => 'menufun_greeting.inc',
+    'access callback' => 'user_access',
+    'access arguments' => array('Receive greeting'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  
+  $items['menufun/%/bar/baz'] = array(
+    'title' => 'Hi',
+    'page callback' => 'menufun_hello',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+  );
+  
+  return $items;
+}
+
+/**
+ * Title callback
+ */
+function menufun_title() {
+  drupal_set_title(t('Menu Fun!'));
+  $now = format_date(time());
+  return t('It is now @time', array('@time' => $now));
+}
+
+/**
+ * Page callback for menufun_hello().
+ */
+/*
+function menufun_hello($first_name = '', $last_name = '', 
+  $from_first_name = '', $from_last_name = '') {
+  return t('Hello @first_name @last_name from your pal @from_first_name @from_last_name', array(
+    '@first_name' => $first_name,
+    '@last_name' => $last_name,
+    '@from_first_name' => $from_first_name,
+    '@from_last_name' => $from_last_name,
+    )
+  );
+}
+ */
+
+function menufun_hello($name = NULL) {
+  return t('Hello @name', array('@name' => $name));
+}
