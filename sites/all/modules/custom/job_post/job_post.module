@@ -1,0 +1,108 @@
+<?php
+
+/* 
+ * @file
+ * This module provides a node type called job post
+ */
+
+/**
+ * Implements hook_node_info() to provide our job post type
+ */
+function job_post_node_info() {
+  return array(
+    'job_post' => array(
+      'name' => t('Job Post'),
+      'base' => 'job_post',
+      'description' => t('Use this content type to post a job'),
+      'has_title' => TRUE,
+      'title_label' => t('Job Title'),
+      'help' => t('Enter the job title, job description, and the name of the '
+        . 'company that posted the job'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function job_post_menu_alter(&$callbacks) {
+  // Set callback to check user access permissions, with the argument 'administer nodes'
+  $callbacks['node/add/job_post']['access callback'] = 'user_access';
+  $callbacks['node/add/job_post']['access arguments'] = array('administer nodes');
+}
+
+/**
+ * Implements hook_permission().
+ */
+function job_post_permission() {
+  return array(
+    'create job post' => array(
+      'title' => t('Create a job post'),
+      'description' => t('Create a job post'),
+    ),
+    'edit own job post' => array(
+      'title' => t('Edit own job post'),
+      'description' => t('Edit your own job posting'),
+    ),
+    'edit any job post' => array(
+      'title' => t('Edit any job post'),
+      'description' => t('Edit any job posting'),
+    ),
+    'delete own job post' => array(
+      'title' => t('Delete own job post'),
+      'description' => t('Delete own job posting'),
+    ),
+    'delete any job post' => array(
+      'title' => t('Delete any job post'),
+      'description' => t('Delete any job posting'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_node_access().
+ */
+function job_post_node_access($node, $op, $account) {
+  $is_author = $account->uid == $node->uid;
+  switch ($op) {
+    case 'create':
+      // Allow if user's role has 'create job post' permission
+      if (user_access('create job post', $account)) {
+        return NODE_ACCESS_ALLOW;
+      }
+      
+    case 'update':
+      // Allow if the user's role has 'edit own job post' permission and
+      // the user is the author or if the user's role has 'edit any job post'
+      if (user_access('edit own job post', $account) && $is_author || 
+        user_access('edit any job post', $account)) {
+        return NODE_ACCESS_ALLOW;
+      }
+      
+    case 'delete':
+      // Allow if the user's role has 'delete own job post' and the user is the
+      // author or if the user has the 'delete any job post' permission
+      if (user_access('delete own job post', $account) && $is_author || 
+        user_access('delete any job post')) {
+        return NODE_ACCESS_ALLOW;
+      }
+  }
+}
+
+/**
+ * Implements hook_form() with the standard default form.
+ */
+function job_post_form($node, $form_state) {
+  return node_content_form($node, $form_state);
+}
+
+/**
+ * Implements hook_validate().
+ */
+function job_post_validate($node) {
+  // Enforce a minimum character count of 2 on company names
+  if (isset($node->job_post_company) && strlen($node->job_post_company['und'][0]['value']) < 2) {
+    form_set_error('job_post_company', t('The company name is too short. It must be at least 2 characters long.'),
+      $limit_validation_errors = NULL);
+  }
+}
